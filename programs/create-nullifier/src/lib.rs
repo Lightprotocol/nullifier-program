@@ -2,6 +2,7 @@
 #![allow(deprecated)]
 
 use anchor_lang::prelude::*;
+use light_sdk::constants::ADDRESS_TREE_V2;
 use light_sdk::{
     account::LightAccount,
     address::v2::derive_address,
@@ -10,7 +11,6 @@ use light_sdk::{
     instruction::{PackedAddressTreeInfo, ValidityProof},
     LightDiscriminator,
 };
-use light_sdk::constants::ADDRESS_TREE_V2;
 
 declare_id!("CkmVPuPjBr6hcviQvoRKuHh9xk4pRmy9udm6egBk56wS");
 

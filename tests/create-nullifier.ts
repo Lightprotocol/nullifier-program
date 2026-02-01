@@ -54,7 +54,7 @@ describe("test-create-nullifier", () => {
     const address = deriveAddressV2(
       seed,
       addressTree,
-      new web3.PublicKey(program.idl.address)
+      new web3.PublicKey(program.idl.address),
     );
 
     // Create nullifier account
@@ -65,7 +65,7 @@ describe("test-create-nullifier", () => {
       program,
       stateTreeInfo,
       signer,
-      Array.from(id)
+      Array.from(id),
     );
     console.log("Transaction ID:", txId);
 
@@ -74,7 +74,7 @@ describe("test-create-nullifier", () => {
     await rpc.confirmTransactionIndexed(slot);
 
     let compressedAccount = await rpc.getCompressedAccount(
-      bn(address.toBytes())
+      bn(address.toBytes()),
     );
 
     // Verify account exists
@@ -106,7 +106,7 @@ describe("test-create-nullifier", () => {
     const address = deriveAddressV2(
       seed,
       addressTree,
-      new web3.PublicKey(program.idl.address)
+      new web3.PublicKey(program.idl.address),
     );
 
     // First creation should succeed
@@ -117,7 +117,7 @@ describe("test-create-nullifier", () => {
       program,
       stateTreeInfo,
       signer,
-      Array.from(id)
+      Array.from(id),
     );
 
     // Wait for indexer
@@ -133,7 +133,7 @@ describe("test-create-nullifier", () => {
         program,
         stateTreeInfo,
         signer,
-        Array.from(id)
+        Array.from(id),
       );
       assert.fail("Should have thrown an error for duplicate nullifier");
     } catch (error) {
@@ -149,7 +149,7 @@ async function createNullifierAccount(
   program: anchor.Program<CreateNullifier>,
   stateTreeInfo: TreeInfo,
   signer: anchor.web3.Keypair,
-  id: number[]
+  id: number[],
 ) {
   const proofRpcResult = await rpc.getValidityProofV0(
     [],
@@ -159,7 +159,7 @@ async function createNullifierAccount(
         queue: addressTree,
         address: bn(address.toBytes()),
       },
-    ]
+    ],
   );
   const systemAccountConfig = SystemAccountMetaConfig.new(program.programId);
   let remainingAccounts = new PackedAccounts();
@@ -173,7 +173,9 @@ async function createNullifierAccount(
     addressMerkleTreePubkeyIndex,
     addressQueuePubkeyIndex,
   };
-  const outputStateTreeIndex = remainingAccounts.insertOrGet(stateTreeInfo.queue);
+  const outputStateTreeIndex = remainingAccounts.insertOrGet(
+    stateTreeInfo.queue,
+  );
   let proof = {
     0: proofRpcResult.compressedProof,
   };
