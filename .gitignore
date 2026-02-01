@@ -1,0 +1,14 @@
+# Build artifacts
+target/
+node_modules/
+test-ledger/
+
+# Anchor
+.anchor/
+
+# IDL
+*.idl.json
+
+# Local env
+.env
+.env.local
