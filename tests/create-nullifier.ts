@@ -183,7 +183,7 @@ async function createNullifierAccount(
     units: 1000000,
   });
   let tx = await program.methods
-    .createAccount(proof, packedAddressTreeInfo, outputStateTreeIndex, id)
+    .createNullifier(proof, packedAddressTreeInfo, outputStateTreeIndex, id)
     .accounts({
       signer: signer.publicKey,
     })

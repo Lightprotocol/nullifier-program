@@ -12,10 +12,10 @@ use light_sdk::{
     LightDiscriminator,
 };
 
-declare_id!("CkmVPuPjBr6hcviQvoRKuHh9xk4pRmy9udm6egBk56wS");
+declare_id!("BneoNEQRnAKyNXa6hEiXPygNG8HkbRzCeoeohmBNHkF9");
 
 pub const LIGHT_CPI_SIGNER: CpiSigner =
-    derive_light_cpi_signer!("CkmVPuPjBr6hcviQvoRKuHh9xk4pRmy9udm6egBk56wS");
+    derive_light_cpi_signer!("BneoNEQRnAKyNXa6hEiXPygNG8HkbRzCeoeohmBNHkF9");
 
 #[program]
 pub mod create_nullifier {

@@ -14,7 +14,8 @@ use solana_sdk::{
 
 #[tokio::test]
 async fn test_create_nullifier() {
-    let config = ProgramTestConfig::new(true, Some(vec![("create_nullifier", create_nullifier::ID)]));
+    let config =
+        ProgramTestConfig::new(true, Some(vec![("create_nullifier", create_nullifier::ID)]));
     let mut rpc = LightProgramTest::new(config).await.unwrap();
     let payer = rpc.get_payer().insecure_clone();
 
@@ -22,8 +23,8 @@ async fn test_create_nullifier() {
 
     // Create a 32-byte id
     let id: [u8; 32] = [
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27, 28, 29, 30, 31, 32,
     ];
 
     let (address, _) = derive_address(
@@ -45,14 +46,16 @@ async fn test_create_nullifier() {
 
     // Account should exist but have no data (empty struct)
     assert!(
-        compressed_account.data.is_none() || compressed_account.data.as_ref().unwrap().data.is_empty(),
+        compressed_account.data.is_none()
+            || compressed_account.data.as_ref().unwrap().data.is_empty(),
         "Nullifier account should be empty"
     );
 }
 
 #[tokio::test]
 async fn test_create_nullifier_duplicate_fails() {
-    let config = ProgramTestConfig::new(true, Some(vec![("create_nullifier", create_nullifier::ID)]));
+    let config =
+        ProgramTestConfig::new(true, Some(vec![("create_nullifier", create_nullifier::ID)]));
     let mut rpc = LightProgramTest::new(config).await.unwrap();
     let payer = rpc.get_payer().insecure_clone();
 
@@ -116,7 +119,7 @@ async fn create_nullifier_account(
         .concat(),
         data: {
             use anchor_lang::InstructionData;
-            create_nullifier::instruction::CreateAccount {
+            create_nullifier::instruction::CreateNullifier {
                 proof: rpc_result.proof,
                 address_tree_info: packed_accounts.address_trees[0],
                 output_state_tree_index,

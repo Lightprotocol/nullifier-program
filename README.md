@@ -1,8 +1,7 @@
 # Nullifier Program
 
-An Anchor program demonstrating nullifiers on Solana using Light Protocol's ZK compression.
 
-Creates rent-free compressed accounts with unique IDs. If the same ID is used twice, the transaction fails - making it useful for one-time actions like airdrops, votes, or claim systems.
+is used twice, the transaction fails - making it useful for one-time actions like airdrops, votes, or claim systems.
 
 ## Prerequisites
 
