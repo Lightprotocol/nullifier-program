@@ -1,8 +1,7 @@
 # Nullifier Program
 
-An Anchor program demonstrating nullifiers on Solana using Light Protocol's ZK compression.
-
-Creates rent-free compressed accounts with unique IDs. If the same ID is used twice, the transaction fails - useful for one-time actions like airdrops, votes, or claim systems.
+Creates a rent-free PDA derived from id. If the id has been used before, the PDA
+already exists, causing the instruction to fail.
 
 ## Prerequisites
 
@@ -28,9 +27,11 @@ cargo test-sbf -p create-nullifier
 
 Requires local validator with Light Protocol.
 
+- lightprotocol/zk-compression-cli 0.28.0-beta.5
+
 ```bash
-light test-validator  # terminal 1
-npm test              # terminal 2
+light test-validator
+npm test
 ```
 
 ## Rust SDK
@@ -88,8 +89,7 @@ const exists = account !== null;
 
 ## How it works
 
-1. Derive a compressed account address from `["nullifier", id]` seeds
-2. Create the account with an empty struct
-3. If the address exists, the ZK proof verification fails - the nullifier is "spent"
-
-See `programs/create-nullifier/src/lib.rs` for program logic.
+1. Derive a compressed account address from `["nullifier", id]` seeds. E.g. hash payment inputs.
+2. Creates the empty rentfree PDA account, "spending the nullifier"
+3. If the address already exists, the instruction fails
+4. prepend or append this instruction to your regular transaction (eg. payment)

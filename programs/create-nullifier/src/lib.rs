@@ -28,7 +28,8 @@ pub mod create_nullifier {
         v2::LightSystemProgramCpi, InvokeLightSystemProgram, LightCpiInstruction,
     };
 
-    /// Creates a nullifier. If the id has been used before, the instruction fails.
+    /// Creates a rent-free PDA derived from id. If the id has been used before, the PDA already
+    /// exists, causing the instruction to fail.
     pub fn create<'info>(
         ctx: Context<'_, '_, '_, 'info, GenericAnchorAccounts<'info>>,
         proof: ValidityProof,
