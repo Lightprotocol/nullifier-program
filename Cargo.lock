@@ -1082,20 +1082,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "create-nullifier"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "blake3",
- "light-client",
- "light-hasher",
- "light-program-test",
- "light-sdk",
- "solana-sdk",
- "tokio",
-]
-
-[[package]]
 name = "crossbeam-channel"
 version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2734,6 +2720,20 @@ dependencies = [
  "num-bigint 0.4.6",
  "num-traits",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "light-nullifier-program"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "blake3",
+ "light-client",
+ "light-hasher",
+ "light-program-test",
+ "light-sdk",
+ "solana-sdk",
+ "tokio",
 ]
 
 [[package]]

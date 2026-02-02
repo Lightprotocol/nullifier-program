@@ -1,5 +1,5 @@
 [package]
-name = "create-nullifier"
+name = "light-nullifier-program"
 version = "0.1.0"
 description = "Nullifier program and SDK for Light Protocol ZK compression on Solana"
 edition = "2021"
@@ -12,7 +12,7 @@ readme = "../../README.md"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "create_nullifier"
+name = "light_nullifier_program"
 
 [features]
 no-entrypoint = []

@@ -1,5 +1,5 @@
 {
-  "name": "@lightprotocol/nullifier-sdk",
+  "name": "@lightprotocol/nullifier-program",
   "version": "0.1.0",
   "description": "Nullifier SDK for Light Protocol ZK compression on Solana",
   "license": "Apache-2.0",
