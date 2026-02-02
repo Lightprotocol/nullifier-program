@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "programs/create-nullifier",
-    "rust-client",
 ]
 resolver = "2"
 

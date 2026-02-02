@@ -1,44 +1,30 @@
-// Create a nullifier and verify double-spend prevention.
-//
-// Prerequisites:
-//   - Solana keypair at ~/.config/solana/id.json (funded on devnet)
-//   - .env file with API_KEY=<helius-api-key>
-//
-// Run: npm run ts:create-nullifier
+/// Create a nullifier and verify double-spend prevention.
+///
+/// Run: npm run ts:create-nullifier
 
 import "dotenv/config";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
 import * as crypto from "crypto";
-import { web3 } from "@coral-xyz/anchor";
-import { createRpc, Rpc, confirmTx } from "@lightprotocol/stateless.js";
+import { Keypair, LAMPORTS_PER_SOL, ComputeBudgetProgram, Transaction } from "@solana/web3.js";
+import { createRpc, confirmTx, sleep } from "@lightprotocol/stateless.js";
 import { createNullifierIx, deriveNullifierAddress } from "../src";
+import { homedir } from "os";
+import { readFileSync } from "fs";
 
-function loadKeypair(): web3.Keypair {
-  const keypairPath = path.join(
-    os.homedir(),
-    ".config",
-    "solana",
-    "id.json"
-  );
-  const secretKey = JSON.parse(fs.readFileSync(keypairPath, "utf-8"));
-  return web3.Keypair.fromSecretKey(Uint8Array.from(secretKey));
-}
+/// devnet:
+/// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+/// const rpc = createRpc(RPC_URL);
+/// localnet:
+const rpc = createRpc();
 
-function createDevnetRpc(): Rpc {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API_KEY required in .env");
-  }
-  const rpcUrl = `https://devnet.helius-rpc.com/?api-key=${apiKey}`;
-  const photonUrl = `https://devnet.helius-rpc.com/?api-key=${apiKey}`;
-  return createRpc(rpcUrl, photonUrl, photonUrl);
-}
+const payer = Keypair.fromSecretKey(
+  new Uint8Array(
+    JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+  ),
+);
 
 async function main() {
-  const rpc = createDevnetRpc();
-  const payer = loadKeypair();
+  await rpc.requestAirdrop(payer.publicKey, LAMPORTS_PER_SOL);
+  await sleep(2000);
   console.log("Payer:", payer.publicKey.toBase58());
 
   // Generate random 32-byte identifier
@@ -48,10 +34,10 @@ async function main() {
   const ix = await createNullifierIx(rpc, payer.publicKey, id);
 
   // Send transaction
-  const computeIx = web3.ComputeBudgetProgram.setComputeUnitLimit({
+  const computeIx = ComputeBudgetProgram.setComputeUnitLimit({
     units: 1_000_000,
   });
-  const tx = new web3.Transaction().add(computeIx, ix);
+  const tx = new Transaction().add(computeIx, ix);
   tx.recentBlockhash = (await rpc.getRecentBlockhash()).blockhash;
   tx.feePayer = payer.publicKey;
   tx.sign(payer);
@@ -72,6 +58,8 @@ async function main() {
     await createNullifierIx(rpc, payer.publicKey, id);
     console.error("ERROR: duplicate nullifier should have failed");
     process.exit(1);
+  } catch {
+    console.log("Double-spend correctly rejected");
   }
 }
 
