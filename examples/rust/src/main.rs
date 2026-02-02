@@ -1,4 +1,4 @@
-//! Create nullifier example. Run: cargo run --example action_create_nullifier
+//! Create nullifier example. Run: cd examples/rust && cargo run
 
 use dotenv::dotenv;
 use light_client::rpc::{LightClient, LightClientConfig, Rpc};

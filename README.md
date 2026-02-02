@@ -64,10 +64,10 @@ light test-validator --sbf-program NFLx5WGPrTHHvdRNsidcrNcLxRruMC92E4yv7zhZBoT t
 
 #### Rust
 
-> Find and run example here: [rust/action/action_create_nullifier.rs](rust/action/action_create_nullifier.rs).
+> Find and run example here: [rust/src/main.rs](examples/rust/src/main.rs).
 
 ```bash
-cargo run --example action_create_nullifier --manifest-path examples/rust/Cargo.toml
+cd examples/rust && cargo run
 ```
 
 #### TypeScript
