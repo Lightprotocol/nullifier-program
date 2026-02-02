@@ -194,10 +194,10 @@ function encodeAddressTreeInfo(info: {
   addressMerkleTreePubkeyIndex: number;
   addressQueuePubkeyIndex: number;
 }): Buffer {
-  // PackedAddressTreeInfo: root_index: u16, address_merkle_tree_pubkey_index: u8, address_queue_pubkey_index: u8
+  // PackedAddressTreeInfo (Borsh field order): address_merkle_tree_pubkey_index: u8, address_queue_pubkey_index: u8, root_index: u16
   const buf = Buffer.alloc(4);
-  buf.writeUInt16LE(info.rootIndex, 0);
-  buf.writeUInt8(info.addressMerkleTreePubkeyIndex, 2);
-  buf.writeUInt8(info.addressQueuePubkeyIndex, 3);
+  buf.writeUInt8(info.addressMerkleTreePubkeyIndex, 0);
+  buf.writeUInt8(info.addressQueuePubkeyIndex, 1);
+  buf.writeUInt16LE(info.rootIndex, 2);
   return buf;
 }

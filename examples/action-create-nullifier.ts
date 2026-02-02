@@ -4,17 +4,17 @@
 
 import "dotenv/config";
 import * as crypto from "crypto";
-import { Keypair, LAMPORTS_PER_SOL, ComputeBudgetProgram, Transaction } from "@solana/web3.js";
-import { createRpc, confirmTx, sleep } from "@lightprotocol/stateless.js";
+import { Keypair, ComputeBudgetProgram, Transaction } from "@solana/web3.js";
+import { createRpc, confirmTx } from "@lightprotocol/stateless.js";
 import { createNullifierIx, deriveNullifierAddress } from "../src";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-/// devnet:
-/// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-/// const rpc = createRpc(RPC_URL);
 /// localnet:
-const rpc = createRpc();
+/// const rpc = createRpc();
+/// devnet:
+const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const rpc = createRpc(RPC_URL);
 
 const payer = Keypair.fromSecretKey(
   new Uint8Array(
@@ -23,8 +23,9 @@ const payer = Keypair.fromSecretKey(
 );
 
 async function main() {
-  await rpc.requestAirdrop(payer.publicKey, LAMPORTS_PER_SOL);
-  await sleep(2000);
+  /// localnet:
+  /// await rpc.requestAirdrop(payer.publicKey, LAMPORTS_PER_SOL);
+  /// await sleep(2000);
   console.log("Payer:", payer.publicKey.toBase58());
 
   // Generate random 32-byte identifier
