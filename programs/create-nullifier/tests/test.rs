@@ -1,7 +1,7 @@
 #![cfg(feature = "test-sbf")]
 
 use create_nullifier::sdk::{
-    build_instruction, create_nullifier_instruction, derive_nullifier_address, fetch_proof,
+    build_instruction, create_nullifier_ix, derive_nullifier_address, fetch_proof,
     PROGRAM_ID,
 };
 use light_program_test::{program_test::LightProgramTest, Indexer, ProgramTestConfig, Rpc};
@@ -19,7 +19,7 @@ async fn test_create_nullifier() {
     ];
 
     // Use the all-in-one helper
-    let ix = create_nullifier_instruction(&mut rpc, payer.pubkey(), id)
+    let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id)
         .await
         .unwrap();
 
@@ -81,7 +81,7 @@ async fn test_create_nullifier_duplicate_fails() {
     let id: [u8; 32] = [42u8; 32];
 
     // First creation should succeed
-    let ix = create_nullifier_instruction(&mut rpc, payer.pubkey(), id)
+    let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id)
         .await
         .unwrap();
     rpc.create_and_send_transaction(&[ix], &payer.pubkey(), &[&payer])
@@ -89,7 +89,7 @@ async fn test_create_nullifier_duplicate_fails() {
         .unwrap();
 
     // Second creation with same id should fail at transaction level
-    let ix = create_nullifier_instruction(&mut rpc, payer.pubkey(), id)
+    let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id)
         .await
         .unwrap();
     let result = rpc

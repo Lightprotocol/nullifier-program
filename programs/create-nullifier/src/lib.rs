@@ -28,9 +28,8 @@ pub mod create_nullifier {
         v2::LightSystemProgramCpi, InvokeLightSystemProgram, LightCpiInstruction,
     };
 
-    /// Creates a new rent-free account derived from id. If the id has been used
-    /// before, the account exists, and the instruction will fail.
-    pub fn create_account<'info>(
+    /// Creates a nullifier. If the id has been used before, the instruction fails.
+    pub fn create<'info>(
         ctx: Context<'_, '_, '_, 'info, GenericAnchorAccounts<'info>>,
         proof: ValidityProof,
         address_tree_info: PackedAddressTreeInfo,

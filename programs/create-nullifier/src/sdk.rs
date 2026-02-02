@@ -38,10 +38,7 @@ pub struct ProofResult {
 /// Fetches validity proof and packs accounts for a nullifier creation.
 ///
 /// Works with any `Rpc + Indexer` client (LightProgramTest or LightClient).
-pub async fn fetch_proof<R: Rpc + Indexer>(
-    rpc: &mut R,
-    id: &[u8; 32],
-) -> Result<ProofResult, RpcError> {
+pub async fn fetch_proof<R: Rpc + Indexer>(rpc: &mut R, id: &[u8; 32]) -> Result<ProofResult, RpcError> {
     let address = derive_nullifier_address(id);
     let tree = address_tree();
 
@@ -70,13 +67,13 @@ pub async fn fetch_proof<R: Rpc + Indexer>(
     })
 }
 
-/// Builds the create_account instruction from proof data.
+/// Builds the create instruction from proof data.
 ///
 /// This is sync and requires no RPC calls.
 pub fn build_instruction(payer: Pubkey, id: [u8; 32], proof_result: ProofResult) -> Instruction {
     use anchor_lang::InstructionData;
 
-    let data = crate::instruction::CreateAccount {
+    let data = crate::instruction::Create {
         proof: proof_result.proof,
         address_tree_info: proof_result.address_tree_info,
         output_state_tree_index: proof_result.output_state_tree_index,
@@ -98,7 +95,7 @@ pub fn build_instruction(payer: Pubkey, id: [u8; 32], proof_result: ProofResult)
 ///
 /// Combines `fetch_proof` and `build_instruction` for convenience.
 /// Works with any `Rpc + Indexer` client (LightProgramTest or LightClient).
-pub async fn create_nullifier_instruction<R: Rpc + Indexer>(
+pub async fn create_nullifier_ix<R: Rpc + Indexer>(
     rpc: &mut R,
     payer: Pubkey,
     id: [u8; 32],

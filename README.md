@@ -59,17 +59,17 @@ let ix = build_instruction(payer.pubkey(), id, proof_result);
 Works with any `Rpc` from `@lightprotocol/stateless.js`.
 
 ```typescript
-import { createNullifierIx, PROGRAM_ID } from 'nullifier-sdk';
-import { createRpc } from '@lightprotocol/stateless.js';
+import { createNullifierIx, PROGRAM_ID } from "nullifier-sdk";
+import { createRpc } from "@lightprotocol/stateless.js";
 
-const rpc = createRpc('https://devnet.helius-rpc.com/?api-key=...');
+const rpc = createRpc("https://devnet.helius-rpc.com/?api-key=...");
 const ix = await createNullifierIx(rpc, payer.publicKey, id);
 ```
 
 Or step-by-step:
 
 ```typescript
-import { fetchProof, buildInstruction } from 'nullifier-sdk';
+import { fetchProof, buildInstruction } from "nullifier-sdk";
 
 const proofResult = await fetchProof(rpc, id);
 const ix = buildInstruction(payer.publicKey, id, proofResult);
@@ -78,8 +78,8 @@ const ix = buildInstruction(payer.publicKey, id, proofResult);
 Check if nullifier exists:
 
 ```typescript
-import { deriveNullifierAddress } from 'nullifier-sdk';
-import { bn } from '@lightprotocol/stateless.js';
+import { deriveNullifierAddress } from "nullifier-sdk";
+import { bn } from "@lightprotocol/stateless.js";
 
 const address = deriveNullifierAddress(id);
 const account = await rpc.getCompressedAccount(bn(address.toBytes()));
