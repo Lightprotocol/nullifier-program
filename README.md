@@ -20,7 +20,7 @@ npm run build
 ## Test (Rust)
 
 ```bash
-cargo test-sbf -p create-nullifier
+cargo test-sbf -p light-nullifier-program
 ```
 
 ## Test (TypeScript)
@@ -39,7 +39,7 @@ npm test
 Works with `LightClient` (production) or `LightProgramTest` (testing).
 
 ```rust
-use create_nullifier::sdk::{create_nullifier_ix, PROGRAM_ID};
+use light_nullifier_program::sdk::{create_nullifier_ix, PROGRAM_ID};
 use light_client::{LightClient, LightClientConfig};
 
 let mut rpc = LightClient::new(LightClientConfig::new("https://devnet.helius-rpc.com/?api-key=...")).await?;
@@ -49,7 +49,7 @@ let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
 Or step-by-step:
 
 ```rust
-use create_nullifier::sdk::{fetch_proof, build_instruction};
+use light_nullifier_program::sdk::{fetch_proof, build_instruction};
 
 let proof_result = fetch_proof(&mut rpc, &id).await?;
 let ix = build_instruction(payer.pubkey(), id, proof_result);
@@ -60,7 +60,7 @@ let ix = build_instruction(payer.pubkey(), id, proof_result);
 Works with any `Rpc` from `@lightprotocol/stateless.js`.
 
 ```typescript
-import { createNullifierIx, PROGRAM_ID } from "nullifier-sdk";
+import { createNullifierIx, PROGRAM_ID } from "@lightprotocol/nullifier-program";
 import { createRpc } from "@lightprotocol/stateless.js";
 
 const rpc = createRpc("https://devnet.helius-rpc.com/?api-key=...");
@@ -70,7 +70,7 @@ const ix = await createNullifierIx(rpc, payer.publicKey, id);
 Or step-by-step:
 
 ```typescript
-import { fetchProof, buildInstruction } from "nullifier-sdk";
+import { fetchProof, buildInstruction } from "@lightprotocol/nullifier-program";
 
 const proofResult = await fetchProof(rpc, id);
 const ix = buildInstruction(payer.publicKey, id, proofResult);
@@ -79,7 +79,7 @@ const ix = buildInstruction(payer.publicKey, id, proofResult);
 Check if nullifier exists:
 
 ```typescript
-import { deriveNullifierAddress } from "nullifier-sdk";
+import { deriveNullifierAddress } from "@lightprotocol/nullifier-program";
 import { bn } from "@lightprotocol/stateless.js";
 
 const address = deriveNullifierAddress(id);
@@ -93,3 +93,7 @@ const exists = account !== null;
 2. Creates the empty rentfree PDA account, "spending the nullifier"
 3. If the address already exists, the instruction fails
 4. prepend or append this instruction to your regular transaction (eg. payment)
+
+---
+
+The nullifier program code is unaudited, use at your own risk.
