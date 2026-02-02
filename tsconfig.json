@@ -2,9 +2,9 @@
   "compilerOptions": {
     "types": ["mocha", "chai"],
     "typeRoots": ["./node_modules/@types"],
-    "lib": ["es2015"],
+    "lib": ["es2020"],
     "module": "commonjs",
-    "target": "es6",
+    "target": "es2020",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -12,6 +12,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["tests/**/*", "migrations/**/*"],
-  "exclude": ["node_modules", "target"]
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "target", "dist"]
 }

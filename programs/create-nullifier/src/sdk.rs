@@ -38,7 +38,10 @@ pub struct ProofResult {
 /// Fetches validity proof and packs accounts for a nullifier creation.
 ///
 /// Works with any `Rpc + Indexer` client (LightProgramTest or LightClient).
-pub async fn fetch_proof<R: Rpc + Indexer>(rpc: &mut R, id: &[u8; 32]) -> Result<ProofResult, RpcError> {
+pub async fn fetch_proof<R: Rpc + Indexer>(
+    rpc: &mut R,
+    id: &[u8; 32],
+) -> Result<ProofResult, RpcError> {
     let address = derive_nullifier_address(id);
     let tree = address_tree();
 
@@ -95,7 +98,7 @@ pub fn build_instruction(payer: Pubkey, id: [u8; 32], proof_result: ProofResult)
 ///
 /// Combines `fetch_proof` and `build_instruction` for convenience.
 /// Works with any `Rpc + Indexer` client (LightProgramTest or LightClient).
-pub async fn create_nullifier_ix<R: Rpc + Indexer>(
+pub async fn create_nullifier_instruction<R: Rpc + Indexer>(
     rpc: &mut R,
     payer: Pubkey,
     id: [u8; 32],

@@ -1,200 +1,118 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Program, web3 } from "@coral-xyz/anchor";
-import { CreateNullifier } from "../target/types/create_nullifier";
+import { web3 } from '@coral-xyz/anchor';
 import {
-  bn,
-  confirmTx,
-  createRpc,
-  deriveAddressV2,
-  deriveAddressSeedV2,
-  batchAddressTree,
-  PackedAccounts,
-  Rpc,
-  sleep,
-  SystemAccountMetaConfig,
-  featureFlags,
-  VERSION,
-  selectStateTreeInfo,
-  TreeInfo,
-} from "@lightprotocol/stateless.js";
-import * as assert from "assert";
+    confirmTx,
+    createRpc,
+    Rpc,
+    sleep,
+    bn,
+} from '@lightprotocol/stateless.js';
+import {
+    createNullifierIx,
+    deriveNullifierAddress,
+    fetchProof,
+    buildInstruction,
+    PROGRAM_ID,
+} from '../src';
+import * as assert from 'assert';
 
-// Set V2 mode
-(featureFlags as any).version = VERSION.V2;
+describe('nullifier-sdk', () => {
+    let rpc: Rpc;
+    let signer: web3.Keypair;
 
-const path = require("path");
-const os = require("os");
-require("dotenv").config();
+    beforeEach(async () => {
+        rpc = createRpc();
+        signer = new web3.Keypair();
+        await rpc.requestAirdrop(signer.publicKey, web3.LAMPORTS_PER_SOL);
+        await sleep(2000);
+    });
 
-const anchorWalletPath = path.join(os.homedir(), ".config/solana/id.json");
-process.env.ANCHOR_WALLET = anchorWalletPath;
+    it('creates nullifier with all-in-one helper', async () => {
+        const id = new Uint8Array([
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+            20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+        ]);
 
-describe("test-create-nullifier", () => {
-  const program = anchor.workspace.CreateNullifier as Program<CreateNullifier>;
+        const ix = await createNullifierIx(rpc, signer.publicKey, id);
 
-  it("create nullifier account", async () => {
-    let signer = new web3.Keypair();
-    let rpc = createRpc(); // defaults to local
-    let lamports = web3.LAMPORTS_PER_SOL;
-    await rpc.requestAirdrop(signer.publicKey, lamports);
-    await sleep(2000);
+        const computeIx = web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 1_000_000,
+        });
 
-    const stateTreeInfos = await rpc.getStateTreeInfos();
-    const stateTreeInfo = selectStateTreeInfo(stateTreeInfos);
-    const addressTree = new web3.PublicKey(batchAddressTree);
+        const tx = new web3.Transaction().add(computeIx, ix);
+        tx.recentBlockhash = (await rpc.getRecentBlockhash()).blockhash;
+        tx.feePayer = signer.publicKey;
+        tx.sign(signer);
 
-    // Create a 32-byte id
-    const id = new Uint8Array([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-      22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-    ]);
+        const sig = await rpc.sendTransaction(tx, [signer]);
+        await confirmTx(rpc, sig);
 
-    const nullifierSeed = new TextEncoder().encode("nullifier");
-    const seed = deriveAddressSeedV2([nullifierSeed, id]);
-    const address = deriveAddressV2(
-      seed,
-      addressTree,
-      new web3.PublicKey(program.idl.address),
-    );
+        // Verify account exists
+        const address = deriveNullifierAddress(id);
+        const slot = await rpc.getSlot();
+        await rpc.confirmTransactionIndexed(slot);
 
-    // Create nullifier account
-    const txId = await createNullifierAccount(
-      rpc,
-      addressTree,
-      address,
-      program,
-      stateTreeInfo,
-      signer,
-      Array.from(id),
-    );
-    console.log("Transaction ID:", txId);
+        const account = await rpc.getCompressedAccount(bn(address.toBytes()));
+        assert.ok(account, 'Nullifier account should exist');
+    });
 
-    // Wait for indexer to process the transaction
-    const slot = await rpc.getSlot();
-    await rpc.confirmTransactionIndexed(slot);
+    it('creates nullifier step-by-step', async () => {
+        const id = new Uint8Array(32).fill(7);
 
-    let compressedAccount = await rpc.getCompressedAccount(
-      bn(address.toBytes()),
-    );
+        // Step 1: fetch proof
+        const proofResult = await fetchProof(rpc, id);
 
-    // Verify account exists
-    assert.ok(compressedAccount, "Nullifier account should exist");
+        // Step 2: build instruction
+        const ix = buildInstruction(signer.publicKey, id, proofResult);
 
-    // Account data should be empty or null
-    console.log("Nullifier account created successfully with empty data");
-  });
+        // Step 3: send transaction
+        const computeIx = web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 1_000_000,
+        });
+        const tx = new web3.Transaction().add(computeIx, ix);
+        tx.recentBlockhash = (await rpc.getRecentBlockhash()).blockhash;
+        tx.feePayer = signer.publicKey;
+        tx.sign(signer);
 
-  it("duplicate nullifier should fail", async () => {
-    let signer = new web3.Keypair();
-    let rpc = createRpc();
-    let lamports = web3.LAMPORTS_PER_SOL;
-    await rpc.requestAirdrop(signer.publicKey, lamports);
-    await sleep(2000);
+        const sig = await rpc.sendTransaction(tx, [signer]);
+        await confirmTx(rpc, sig);
 
-    const stateTreeInfos = await rpc.getStateTreeInfos();
-    const stateTreeInfo = selectStateTreeInfo(stateTreeInfos);
-    const addressTree = new web3.PublicKey(batchAddressTree);
+        // Verify
+        const address = deriveNullifierAddress(id);
+        const slot = await rpc.getSlot();
+        await rpc.confirmTransactionIndexed(slot);
 
-    // Use same id for both attempts
-    const id = new Uint8Array([
-      42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-      42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-    ]);
+        const account = await rpc.getCompressedAccount(bn(address.toBytes()));
+        assert.ok(account, 'Nullifier account should exist');
+    });
 
-    const nullifierSeed = new TextEncoder().encode("nullifier");
-    const seed = deriveAddressSeedV2([nullifierSeed, id]);
-    const address = deriveAddressV2(
-      seed,
-      addressTree,
-      new web3.PublicKey(program.idl.address),
-    );
+    it('duplicate nullifier fails', async () => {
+        const id = new Uint8Array(32).fill(42);
 
-    // First creation should succeed
-    await createNullifierAccount(
-      rpc,
-      addressTree,
-      address,
-      program,
-      stateTreeInfo,
-      signer,
-      Array.from(id),
-    );
+        // First creation succeeds
+        const ix1 = await createNullifierIx(rpc, signer.publicKey, id);
+        const computeIx = web3.ComputeBudgetProgram.setComputeUnitLimit({
+            units: 1_000_000,
+        });
+        const tx1 = new web3.Transaction().add(computeIx, ix1);
+        tx1.recentBlockhash = (await rpc.getRecentBlockhash()).blockhash;
+        tx1.feePayer = signer.publicKey;
+        tx1.sign(signer);
 
-    // Wait for indexer
-    const slot = await rpc.getSlot();
-    await rpc.confirmTransactionIndexed(slot);
+        await rpc.sendTransaction(tx1, [signer]);
+        const slot = await rpc.getSlot();
+        await rpc.confirmTransactionIndexed(slot);
 
-    // Second creation with same id should fail
-    try {
-      await createNullifierAccount(
-        rpc,
-        addressTree,
-        address,
-        program,
-        stateTreeInfo,
-        signer,
-        Array.from(id),
-      );
-      assert.fail("Should have thrown an error for duplicate nullifier");
-    } catch (error) {
-      console.log("Expected error for duplicate nullifier:", error.message);
-    }
-  });
+        // Second creation fails
+        try {
+            const ix2 = await createNullifierIx(rpc, signer.publicKey, id);
+            const tx2 = new web3.Transaction().add(computeIx, ix2);
+            tx2.recentBlockhash = (await rpc.getRecentBlockhash()).blockhash;
+            tx2.feePayer = signer.publicKey;
+            tx2.sign(signer);
+            await rpc.sendTransaction(tx2, [signer]);
+            assert.fail('Should have thrown');
+        } catch (err) {
+            // Expected
+        }
+    });
 });
-
-async function createNullifierAccount(
-  rpc: Rpc,
-  addressTree: anchor.web3.PublicKey,
-  address: anchor.web3.PublicKey,
-  program: anchor.Program<CreateNullifier>,
-  stateTreeInfo: TreeInfo,
-  signer: anchor.web3.Keypair,
-  id: number[],
-) {
-  const proofRpcResult = await rpc.getValidityProofV0(
-    [],
-    [
-      {
-        tree: addressTree,
-        queue: addressTree,
-        address: bn(address.toBytes()),
-      },
-    ],
-  );
-  const systemAccountConfig = SystemAccountMetaConfig.new(program.programId);
-  let remainingAccounts = new PackedAccounts();
-  remainingAccounts.addSystemAccountsV2(systemAccountConfig);
-
-  const addressMerkleTreePubkeyIndex =
-    remainingAccounts.insertOrGet(addressTree);
-  const addressQueuePubkeyIndex = addressMerkleTreePubkeyIndex;
-  const packedAddressTreeInfo = {
-    rootIndex: proofRpcResult.rootIndices[0],
-    addressMerkleTreePubkeyIndex,
-    addressQueuePubkeyIndex,
-  };
-  const outputStateTreeIndex = remainingAccounts.insertOrGet(
-    stateTreeInfo.queue,
-  );
-  let proof = {
-    0: proofRpcResult.compressedProof,
-  };
-  const computeBudgetIx = web3.ComputeBudgetProgram.setComputeUnitLimit({
-    units: 1000000,
-  });
-  let tx = await program.methods
-    .createNullifier(proof, packedAddressTreeInfo, outputStateTreeIndex, id)
-    .accounts({
-      signer: signer.publicKey,
-    })
-    .preInstructions([computeBudgetIx])
-    .remainingAccounts(remainingAccounts.toAccountMetas().remainingAccounts)
-    .signers([signer])
-    .transaction();
-  tx.recentBlockhash = (await rpc.getRecentBlockhash()).blockhash;
-  tx.sign(signer);
-
-  const sig = await rpc.sendTransaction(tx, [signer]);
-  await confirmTx(rpc, sig);
-  return sig;
-}

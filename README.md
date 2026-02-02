@@ -15,21 +15,27 @@ Creates rent-free compressed accounts with unique IDs. If the same ID is used tw
 
 ```bash
 anchor build
+npm run build
 ```
 
-## Test
+## Test (Rust)
 
 ```bash
 cargo test-sbf -p create-nullifier
 ```
 
-## SDK Usage
+## Test (TypeScript)
 
-The crate exposes an SDK module for building instructions without reimplementing the logic.
+Requires local validator with Light Protocol.
+
+```bash
+light test-validator  # terminal 1
+npm test              # terminal 2
+```
+
+## Rust SDK
 
 Works with `LightClient` (production) or `LightProgramTest` (testing).
-
-### All-in-one
 
 ```rust
 use create_nullifier::sdk::{create_nullifier_ix, PROGRAM_ID};
@@ -37,31 +43,47 @@ use light_client::{LightClient, LightClientConfig};
 
 let mut rpc = LightClient::new(LightClientConfig::new("https://devnet.helius-rpc.com/?api-key=...")).await?;
 let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
-rpc.send_transaction(&tx).await?;
 ```
 
-### Step-by-step
+Or step-by-step:
 
 ```rust
-use create_nullifier::sdk::{fetch_proof, build_instruction, derive_nullifier_address};
+use create_nullifier::sdk::{fetch_proof, build_instruction};
 
-// 1. Fetch proof (async, requires RPC)
 let proof_result = fetch_proof(&mut rpc, &id).await?;
-
-// 2. Build instruction (sync, no RPC)
 let ix = build_instruction(payer.pubkey(), id, proof_result);
-
-// 3. Add to your transaction
-tx.add(ix);
 ```
 
-### Check if nullifier exists
+## TypeScript SDK
 
-```rust
-use create_nullifier::sdk::derive_nullifier_address;
+Works with any `Rpc` from `@lightprotocol/stateless.js`.
 
-let address = derive_nullifier_address(&id);
-let exists = rpc.get_compressed_account(address, None).await?.value.is_some();
+```typescript
+import { createNullifierIx, PROGRAM_ID } from 'nullifier-sdk';
+import { createRpc } from '@lightprotocol/stateless.js';
+
+const rpc = createRpc('https://devnet.helius-rpc.com/?api-key=...');
+const ix = await createNullifierIx(rpc, payer.publicKey, id);
+```
+
+Or step-by-step:
+
+```typescript
+import { fetchProof, buildInstruction } from 'nullifier-sdk';
+
+const proofResult = await fetchProof(rpc, id);
+const ix = buildInstruction(payer.publicKey, id, proofResult);
+```
+
+Check if nullifier exists:
+
+```typescript
+import { deriveNullifierAddress } from 'nullifier-sdk';
+import { bn } from '@lightprotocol/stateless.js';
+
+const address = deriveNullifierAddress(id);
+const account = await rpc.getCompressedAccount(bn(address.toBytes()));
+const exists = account !== null;
 ```
 
 ## How it works
@@ -70,4 +92,4 @@ let exists = rpc.get_compressed_account(address, None).await?.value.is_some();
 2. Create the account with an empty struct
 3. If the address exists, the ZK proof verification fails - the nullifier is "spent"
 
-See `programs/create-nullifier/src/lib.rs` for program logic and `src/sdk.rs` for the SDK.
+See `programs/create-nullifier/src/lib.rs` for program logic.
