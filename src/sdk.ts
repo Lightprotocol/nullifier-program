@@ -133,11 +133,23 @@ export function buildInstruction(
     // Signer (from Anchor accounts struct)
     { pubkey: payer, isSigner: true, isWritable: true },
     // System accounts for CpiAccounts (V2 layout)
-    { pubkey: LightSystemProgram.programId, isSigner: false, isWritable: false },
+    {
+      pubkey: LightSystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    },
     { pubkey: CPI_AUTHORITY, isSigner: false, isWritable: false },
     { pubkey: sys.registeredProgramPda, isSigner: false, isWritable: false },
-    { pubkey: sys.accountCompressionAuthority, isSigner: false, isWritable: false },
-    { pubkey: sys.accountCompressionProgram, isSigner: false, isWritable: false },
+    {
+      pubkey: sys.accountCompressionAuthority,
+      isSigner: false,
+      isWritable: false,
+    },
+    {
+      pubkey: sys.accountCompressionProgram,
+      isSigner: false,
+      isWritable: false,
+    },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     // Packed accounts: address tree, output queue
     { pubkey: proofResult.addressTree, isSigner: false, isWritable: true },
