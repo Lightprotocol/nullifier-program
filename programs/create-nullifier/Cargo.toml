@@ -1,7 +1,7 @@
 [package]
 name = "light-nullifier-program"
-version = "0.1.1"
-description = "SDK to interact with the rent-free nullifier program on Solana"
+version = "0.1.2"
+description = "Nullifier program and SDK for Light Protocol ZK compression on Solana"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/Lightprotocol/nullifier-program"
@@ -25,15 +25,15 @@ idl-build = ["anchor-lang/idl-build", "light-sdk/idl-build"]
 
 [dependencies]
 anchor-lang = "0.31.1"
-light-sdk = { version = "0.18.0", features = ["anchor", "anchor-discriminator", "cpi-context"] }
+light-sdk = { version = "0.19.0", features = ["anchor", "anchor-discriminator", "cpi-context"] }
 light-hasher = "5.0.0"
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
 solana-sdk = "2.2"
-light-program-test = "0.18.0"
+light-program-test = "0.19.0"
 
 [dev-dependencies]
-light-client = "0.18.0"
+light-client = "0.19.0"
 tokio = "1.36.0"
 blake3 = "=1.8.2"
 

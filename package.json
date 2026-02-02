@@ -1,6 +1,6 @@
 {
   "name": "@lightprotocol/nullifier-program",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "SDK to interact with therent-free nullifier program on Solana",
   "license": "Apache-2.0",
   "repository": {

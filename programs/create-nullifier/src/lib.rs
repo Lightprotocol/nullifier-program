@@ -12,7 +12,7 @@ use light_sdk::{
     cpi::{v2::CpiAccounts, CpiSigner},
     derive_light_cpi_signer,
     instruction::{PackedAddressTreeInfo, ValidityProof},
-    LightDiscriminator,
+    LightDiscriminator, PackedAddressTreeInfoExt,
 };
 
 declare_id!("NFLx5WGPrTHHvdRNsidcrNcLxRruMC92E4yv7zhZBoT");
