@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-light_nullifier_program = "BneoNEQRnAKyNXa6hEiXPygNG8HkbRzCeoeohmBNHkF9"
+light_nullifier_program = "NFLx5WGPrTHHvdRNsidcrNcLxRruMC92E4yv7zhZBoT"
 
 [registry]
 url = "https://api.apr.dev"

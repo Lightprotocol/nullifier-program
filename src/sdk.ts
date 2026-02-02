@@ -22,7 +22,7 @@ import {
 
 /** Program ID */
 export const PROGRAM_ID = new PublicKey(
-  "BneoNEQRnAKyNXa6hEiXPygNG8HkbRzCeoeohmBNHkF9",
+  "NFLx5WGPrTHHvdRNsidcrNcLxRruMC92E4yv7zhZBoT",
 );
 
 /** Address tree (V2 batch tree) */
