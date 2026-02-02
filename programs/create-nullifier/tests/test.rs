@@ -119,7 +119,7 @@ async fn create_nullifier_account(
         .concat(),
         data: {
             use anchor_lang::InstructionData;
-            create_nullifier::instruction::CreateNullifier {
+            create_nullifier::instruction::CreateAccount {
                 proof: rpc_result.proof,
                 address_tree_info: packed_accounts.address_trees[0],
                 output_state_tree_index,
