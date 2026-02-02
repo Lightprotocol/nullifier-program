@@ -8,16 +8,17 @@ import {
   PublicKey,
   TransactionInstruction,
   AccountMeta,
+  SystemProgram,
 } from "@solana/web3.js";
 import {
   bn,
   batchAddressTree,
   deriveAddressSeedV2,
   deriveAddressV2,
-  PackedAccounts,
   Rpc,
   selectStateTreeInfo,
-  SystemAccountMetaConfig,
+  LightSystemProgram,
+  defaultStaticAccountsStruct,
 } from "@lightprotocol/stateless.js";
 
 /** Program ID */
@@ -30,6 +31,12 @@ export const ADDRESS_TREE = new PublicKey(batchAddressTree);
 
 /** create_nullifier instruction discriminator */
 const DISCRIMINATOR = Buffer.from([171, 144, 50, 154, 87, 170, 57, 66]);
+
+/** CPI authority PDA for our program */
+const CPI_AUTHORITY = PublicKey.findProgramAddressSync(
+  [Buffer.from("cpi_authority")],
+  PROGRAM_ID,
+)[0];
 
 /**
  * Derives the nullifier address for a given ID.
@@ -55,7 +62,8 @@ export interface ProofResult {
     addressQueuePubkeyIndex: number;
   };
   outputStateTreeIndex: number;
-  remainingAccounts: AccountMeta[];
+  outputQueue: PublicKey;
+  addressTree: PublicKey;
 }
 
 /**
@@ -66,10 +74,6 @@ export async function fetchProof(
   id: Uint8Array,
 ): Promise<ProofResult> {
   const address = deriveNullifierAddress(id);
-
-  const config = SystemAccountMetaConfig.new(PROGRAM_ID);
-  const packed = new PackedAccounts();
-  packed.addSystemAccountsV2(config);
 
   const proofResult = await rpc.getValidityProofV0(
     [],
@@ -86,26 +90,27 @@ export async function fetchProof(
     throw new Error("No proof returned - address may already exist");
   }
 
-  const addressMerkleTreePubkeyIndex = packed.insertOrGet(ADDRESS_TREE);
-
+  // Get output state tree
   const stateTreeInfos = await rpc.getStateTreeInfos();
   const stateTreeInfo = selectStateTreeInfo(stateTreeInfos);
-  const outputStateTreeIndex = packed.insertOrGet(stateTreeInfo.queue);
 
+  // For V2, address tree index is 0 (first in packed accounts after system accounts)
+  // Output queue index is 1 (second in packed accounts)
   return {
     proof: proofResult.compressedProof,
     addressTreeInfo: {
       rootIndex: proofResult.rootIndices[0],
-      addressMerkleTreePubkeyIndex,
-      addressQueuePubkeyIndex: addressMerkleTreePubkeyIndex,
+      addressMerkleTreePubkeyIndex: 0,
+      addressQueuePubkeyIndex: 0,
     },
-    outputStateTreeIndex,
-    remainingAccounts: packed.toAccountMetas().remainingAccounts,
+    outputStateTreeIndex: 1,
+    outputQueue: stateTreeInfo.queue,
+    addressTree: ADDRESS_TREE,
   };
 }
 
 /**
- * Builds the create_account instruction from proof data.
+ * Builds the create_nullifier instruction from proof data.
  */
 export function buildInstruction(
   payer: PublicKey,
@@ -120,9 +125,23 @@ export function buildInstruction(
     Buffer.from(id),
   ]);
 
+  const sys = defaultStaticAccountsStruct();
+
+  // Build accounts explicitly to match Rust program expectations
+  // Order: signer, then remaining accounts for CpiAccounts
   const accounts: AccountMeta[] = [
+    // Signer (from Anchor accounts struct)
     { pubkey: payer, isSigner: true, isWritable: true },
-    ...proofResult.remainingAccounts,
+    // System accounts for CpiAccounts (V2 layout)
+    { pubkey: LightSystemProgram.programId, isSigner: false, isWritable: false },
+    { pubkey: CPI_AUTHORITY, isSigner: false, isWritable: false },
+    { pubkey: sys.registeredProgramPda, isSigner: false, isWritable: false },
+    { pubkey: sys.accountCompressionAuthority, isSigner: false, isWritable: false },
+    { pubkey: sys.accountCompressionProgram, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    // Packed accounts: address tree, output queue
+    { pubkey: proofResult.addressTree, isSigner: false, isWritable: true },
+    { pubkey: proofResult.outputQueue, isSigner: false, isWritable: true },
   ];
 
   return new TransactionInstruction({
@@ -147,10 +166,10 @@ export async function createNullifierIx(
 // Encoding helpers
 
 function encodeProof(proof: { a: number[]; b: number[]; c: number[] }): Buffer {
-  // ValidityProof is an enum with variant 0 = Some(CompressedProof)
+  // ValidityProof is Option<CompressedProof> - Borsh: 0 = None, 1 = Some
   // CompressedProof: a: [u8; 32], b: [u8; 64], c: [u8; 32]
   return Buffer.concat([
-    Buffer.from([0]), // enum variant for Some
+    Buffer.from([1]), // Borsh Option variant: 1 = Some
     Buffer.from(proof.a),
     Buffer.from(proof.b),
     Buffer.from(proof.c),
