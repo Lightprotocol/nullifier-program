@@ -21,6 +21,11 @@ pub fn address_tree() -> Pubkey {
     Pubkey::new_from_array(light_sdk::constants::ADDRESS_TREE_V2)
 }
 
+/// Output queue pubkey (V2 batch queue 5: oq5oh5ZR3yGomuQgFduNDzjtGvVWfDRGLuDVjv9a96P).
+pub fn output_queue() -> Pubkey {
+    solana_sdk::pubkey!("oq5oh5ZR3yGomuQgFduNDzjtGvVWfDRGLuDVjv9a96P")
+}
+
 /// Derives the nullifier address for a given ID.
 pub fn derive_nullifier_address(id: &[u8; 32]) -> [u8; 32] {
     let (address, _) = derive_address(&[b"nullifier", id], &address_tree(), &PROGRAM_ID);
@@ -53,9 +58,8 @@ pub async fn fetch_proof<R: Rpc + Indexer>(rpc: &mut R, id: &[u8; 32]) -> Result
 
     let tree_infos = rpc_result.pack_tree_infos(&mut packed);
 
-    let output_state_tree_index = rpc
-        .get_random_state_tree_info()?
-        .pack_output_tree_index(&mut packed)?;
+    // Hardcode output queue (oq5) - index 1 in packed accounts after address tree
+    let output_state_tree_index = packed.insert_or_get(output_queue());
 
     let (remaining_accounts, _, _) = packed.to_account_metas();
 

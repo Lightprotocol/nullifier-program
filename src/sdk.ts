@@ -16,7 +16,6 @@ import {
   deriveAddressSeedV2,
   deriveAddressV2,
   Rpc,
-  selectStateTreeInfo,
   LightSystemProgram,
   defaultStaticAccountsStruct,
 } from "@lightprotocol/stateless.js";
@@ -28,6 +27,11 @@ export const PROGRAM_ID = new PublicKey(
 
 /** Address tree (V2 batch tree) */
 export const ADDRESS_TREE = new PublicKey(batchAddressTree);
+
+/** Output queue (V2 batch queue 5) */
+export const OUTPUT_QUEUE = new PublicKey(
+  "oq5oh5ZR3yGomuQgFduNDzjtGvVWfDRGLuDVjv9a96P",
+);
 
 /** create_nullifier instruction discriminator */
 const DISCRIMINATOR = Buffer.from([171, 144, 50, 154, 87, 170, 57, 66]);
@@ -90,12 +94,9 @@ export async function fetchProof(
     throw new Error("No proof returned - address may already exist");
   }
 
-  // Get output state tree
-  const stateTreeInfos = await rpc.getStateTreeInfos();
-  const stateTreeInfo = selectStateTreeInfo(stateTreeInfos);
-
-  // For V2, address tree index is 0 (first in packed accounts after system accounts)
-  // Output queue index is 1 (second in packed accounts)
+  // Hardcoded tree indices:
+  // - Address tree at packed index 0
+  // - Output queue at packed index 1
   return {
     proof: proofResult.compressedProof,
     addressTreeInfo: {
@@ -104,7 +105,7 @@ export async function fetchProof(
       addressQueuePubkeyIndex: 0,
     },
     outputStateTreeIndex: 1,
-    outputQueue: stateTreeInfo.queue,
+    outputQueue: OUTPUT_QUEUE,
     addressTree: ADDRESS_TREE,
   };
 }
