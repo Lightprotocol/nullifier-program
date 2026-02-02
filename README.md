@@ -60,7 +60,10 @@ let ix = build_instruction(payer.pubkey(), id, proof_result);
 Works with any `Rpc` from `@lightprotocol/stateless.js`.
 
 ```typescript
-import { createNullifierIx, PROGRAM_ID } from "@lightprotocol/nullifier-program";
+import {
+  createNullifierIx,
+  PROGRAM_ID,
+} from "@lightprotocol/nullifier-program";
 import { createRpc } from "@lightprotocol/stateless.js";
 
 const rpc = createRpc("https://devnet.helius-rpc.com/?api-key=...");
