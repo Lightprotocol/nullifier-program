@@ -1,21 +1,41 @@
 {
-  "name": "nullifier-sdk",
+  "name": "@lightprotocol/nullifier-sdk",
   "version": "0.1.0",
-  "license": "ISC",
+  "description": "Nullifier SDK for Light Protocol ZK compression on Solana",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lightprotocol/nullifier-program"
+  },
+  "homepage": "https://github.com/Lightprotocol/nullifier-program",
+  "keywords": [
+    "solana",
+    "light-protocol",
+    "zk-compression",
+    "nullifier"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
   },
+  "peerDependencies": {
+    "@lightprotocol/stateless.js": ">=0.22.0"
+  },
   "dependencies": {
-    "@coral-xyz/anchor": "0.31.1",
-    "@lightprotocol/stateless.js": "0.22.1-alpha.1",
     "@solana/web3.js": "^1.95.0"
   },
   "devDependencies": {
+    "@coral-xyz/anchor": "0.31.1",
+    "@lightprotocol/stateless.js": "0.22.1-alpha.1",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",

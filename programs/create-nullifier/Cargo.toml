@@ -1,8 +1,14 @@
 [package]
 name = "create-nullifier"
 version = "0.1.0"
-description = "Created with Anchor"
+description = "Nullifier program and SDK for Light Protocol ZK compression on Solana"
 edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/Lightprotocol/nullifier-program"
+homepage = "https://github.com/Lightprotocol/nullifier-program"
+keywords = ["solana", "light-protocol", "zk-compression", "nullifier"]
+categories = ["cryptography", "no-std"]
+readme = "../../README.md"
 
 [lib]
 crate-type = ["cdylib", "lib"]
