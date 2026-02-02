@@ -1,7 +1,7 @@
 {
   "name": "@lightprotocol/nullifier-program",
   "version": "0.1.1",
-  "description": "Nullifier SDK for Light Protocol ZK compression on Solana",
+  "description": "SDK to interact with therent-free nullifier program on Solana",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

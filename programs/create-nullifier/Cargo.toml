@@ -1,7 +1,7 @@
 [package]
 name = "light-nullifier-program"
 version = "0.1.1"
-description = "Nullifier program and SDK for Light Protocol ZK compression on Solana"
+description = "SDK to interact with the rent-free nullifier program on Solana"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/Lightprotocol/nullifier-program"
