@@ -2,6 +2,9 @@
 #![allow(deprecated)]
 
 use anchor_lang::prelude::*;
+
+#[cfg(not(target_os = "solana"))]
+pub mod sdk;
 use light_sdk::constants::ADDRESS_TREE_V2;
 use light_sdk::{
     account::LightAccount,

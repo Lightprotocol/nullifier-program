@@ -1,42 +1,33 @@
 #![cfg(feature = "test-sbf")]
 
-use light_program_test::{
-    program_test::LightProgramTest, AddressWithTree, Indexer, ProgramTestConfig, Rpc, RpcError,
+use create_nullifier::sdk::{
+    build_instruction, create_nullifier_ix, derive_nullifier_address, fetch_proof, PROGRAM_ID,
 };
-use light_sdk::{
-    address::v2::derive_address,
-    instruction::{PackedAccounts, SystemAccountMetaConfig},
-};
-use solana_sdk::{
-    instruction::{AccountMeta, Instruction},
-    signature::{Keypair, Signature, Signer},
-};
+use light_program_test::{program_test::LightProgramTest, Indexer, ProgramTestConfig, Rpc};
+use solana_sdk::signature::Signer;
 
 #[tokio::test]
 async fn test_create_nullifier() {
-    let config =
-        ProgramTestConfig::new(true, Some(vec![("create_nullifier", create_nullifier::ID)]));
+    let config = ProgramTestConfig::new(true, Some(vec![("create_nullifier", PROGRAM_ID)]));
     let mut rpc = LightProgramTest::new(config).await.unwrap();
     let payer = rpc.get_payer().insecure_clone();
 
-    let address_tree_info = rpc.get_address_tree_v2();
-
-    // Create a 32-byte id
     let id: [u8; 32] = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
         26, 27, 28, 29, 30, 31, 32,
     ];
 
-    let (address, _) = derive_address(
-        &[b"nullifier", &id],
-        &address_tree_info.tree,
-        &create_nullifier::ID,
-    );
-
-    create_nullifier_account(&mut rpc, &payer, &address, id)
+    // Use the all-in-one helper
+    let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id)
         .await
         .unwrap();
 
+    rpc.create_and_send_transaction(&[ix], &payer.pubkey(), &[&payer])
+        .await
+        .unwrap();
+
+    // Verify account exists
+    let address = derive_nullifier_address(&id);
     let compressed_account = rpc
         .get_compressed_account(address, None)
         .await
@@ -44,7 +35,6 @@ async fn test_create_nullifier() {
         .value
         .unwrap();
 
-    // Account should exist but have no data (empty struct)
     assert!(
         compressed_account.data.is_none()
             || compressed_account.data.as_ref().unwrap().data.is_empty(),
@@ -53,82 +43,56 @@ async fn test_create_nullifier() {
 }
 
 #[tokio::test]
-async fn test_create_nullifier_duplicate_fails() {
-    let config =
-        ProgramTestConfig::new(true, Some(vec![("create_nullifier", create_nullifier::ID)]));
+async fn test_create_nullifier_step_by_step() {
+    let config = ProgramTestConfig::new(true, Some(vec![("create_nullifier", PROGRAM_ID)]));
     let mut rpc = LightProgramTest::new(config).await.unwrap();
     let payer = rpc.get_payer().insecure_clone();
 
-    let address_tree_info = rpc.get_address_tree_v2();
+    let id: [u8; 32] = [7u8; 32];
 
-    let id: [u8; 32] = [42u8; 32];
+    // Step 1: fetch proof (async)
+    let proof_result = fetch_proof(&mut rpc, &id).await.unwrap();
 
-    let (address, _) = derive_address(
-        &[b"nullifier", &id],
-        &address_tree_info.tree,
-        &create_nullifier::ID,
-    );
+    // Step 2: build instruction (sync)
+    let ix = build_instruction(payer.pubkey(), id, proof_result);
 
-    // First creation should succeed
-    create_nullifier_account(&mut rpc, &payer, &address, id)
+    // Step 3: send transaction
+    rpc.create_and_send_transaction(&[ix], &payer.pubkey(), &[&payer])
         .await
         .unwrap();
 
-    // Second creation with same id should fail (address already exists)
-    let result = create_nullifier_account(&mut rpc, &payer, &address, id).await;
-    assert!(result.is_err(), "Duplicate nullifier creation should fail");
+    // Verify
+    let address = derive_nullifier_address(&id);
+    let account = rpc
+        .get_compressed_account(address, None)
+        .await
+        .unwrap()
+        .value;
+    assert!(account.is_some(), "Nullifier account should exist");
 }
 
-async fn create_nullifier_account(
-    rpc: &mut LightProgramTest,
-    payer: &Keypair,
-    address: &[u8; 32],
-    id: [u8; 32],
-) -> Result<Signature, RpcError> {
-    let config = SystemAccountMetaConfig::new(create_nullifier::ID);
-    let mut remaining_accounts = PackedAccounts::default();
-    remaining_accounts.add_system_accounts_v2(config)?;
+#[tokio::test]
+async fn test_create_nullifier_duplicate_fails() {
+    let config = ProgramTestConfig::new(true, Some(vec![("create_nullifier", PROGRAM_ID)]));
+    let mut rpc = LightProgramTest::new(config).await.unwrap();
+    let payer = rpc.get_payer().insecure_clone();
 
-    let address_tree_info = rpc.get_address_tree_v2();
+    let id: [u8; 32] = [42u8; 32];
 
-    let rpc_result = rpc
-        .get_validity_proof(
-            vec![],
-            vec![AddressWithTree {
-                address: *address,
-                tree: address_tree_info.tree,
-            }],
-            None,
-        )
-        .await?
-        .value;
-    let packed_accounts = rpc_result.pack_tree_infos(&mut remaining_accounts);
-
-    let output_state_tree_index = rpc
-        .get_random_state_tree_info()?
-        .pack_output_tree_index(&mut remaining_accounts)?;
-
-    let (remaining_accounts, _, _) = remaining_accounts.to_account_metas();
-
-    let instruction = Instruction {
-        program_id: create_nullifier::ID,
-        accounts: [
-            vec![AccountMeta::new(payer.pubkey(), true)],
-            remaining_accounts,
-        ]
-        .concat(),
-        data: {
-            use anchor_lang::InstructionData;
-            create_nullifier::instruction::CreateAccount {
-                proof: rpc_result.proof,
-                address_tree_info: packed_accounts.address_trees[0],
-                output_state_tree_index,
-                id,
-            }
-            .data()
-        },
-    };
-
-    rpc.create_and_send_transaction(&[instruction], &payer.pubkey(), &[payer])
+    // First creation should succeed
+    let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id)
         .await
+        .unwrap();
+    rpc.create_and_send_transaction(&[ix], &payer.pubkey(), &[&payer])
+        .await
+        .unwrap();
+
+    // Second creation with same id should fail at transaction level
+    let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id)
+        .await
+        .unwrap();
+    let result = rpc
+        .create_and_send_transaction(&[ix], &payer.pubkey(), &[&payer])
+        .await;
+    assert!(result.is_err(), "Duplicate nullifier creation should fail");
 }
