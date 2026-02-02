@@ -27,13 +27,17 @@ cargo test-sbf -p create-nullifier
 
 The crate exposes an SDK module for building instructions without reimplementing the logic.
 
+Works with `LightClient` (production) or `LightProgramTest` (testing).
+
 ### All-in-one
 
 ```rust
 use create_nullifier::sdk::{create_nullifier_ix, PROGRAM_ID};
+use light_client::{LightClient, LightClientConfig};
 
+let mut rpc = LightClient::new(LightClientConfig::new("https://devnet.helius-rpc.com/?api-key=...")).await?;
 let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
-rpc.create_and_send_transaction(&[ix], &payer.pubkey(), &[&payer]).await?;
+rpc.send_transaction(&tx).await?;
 ```
 
 ### Step-by-step
