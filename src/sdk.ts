@@ -28,8 +28,8 @@ export const PROGRAM_ID = new PublicKey(
 /** Address tree (V2 batch tree) */
 export const ADDRESS_TREE = new PublicKey(batchAddressTree);
 
-/** create instruction discriminator */
-const DISCRIMINATOR = Buffer.from([24, 30, 200, 40, 5, 28, 7, 119]);
+/** create_nullifier instruction discriminator */
+const DISCRIMINATOR = Buffer.from([171, 144, 50, 154, 87, 170, 57, 66]);
 
 /**
  * Derives the nullifier address for a given ID.

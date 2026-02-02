@@ -30,7 +30,7 @@ pub mod create_nullifier {
 
     /// Creates a rent-free PDA derived from id. If the id has been used before, the PDA already
     /// exists, causing the instruction to fail.
-    pub fn create<'info>(
+    pub fn create_nullifier<'info>(
         ctx: Context<'_, '_, '_, 'info, GenericAnchorAccounts<'info>>,
         proof: ValidityProof,
         address_tree_info: PackedAddressTreeInfo,

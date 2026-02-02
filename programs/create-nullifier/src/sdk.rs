@@ -67,13 +67,13 @@ pub async fn fetch_proof<R: Rpc + Indexer>(rpc: &mut R, id: &[u8; 32]) -> Result
     })
 }
 
-/// Builds the create instruction from proof data.
+/// Builds the create_nullifier instruction from proof data.
 ///
 /// This is sync and requires no RPC calls.
 pub fn build_instruction(payer: Pubkey, id: [u8; 32], proof_result: ProofResult) -> Instruction {
     use anchor_lang::InstructionData;
 
-    let data = crate::instruction::Create {
+    let data = crate::instruction::CreateNullifier {
         proof: proof_result.proof,
         address_tree_info: proof_result.address_tree_info,
         output_state_tree_index: proof_result.output_state_tree_index,
