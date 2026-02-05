@@ -25,16 +25,64 @@ cargo test-sbf -p light-nullifier-program
 
 ## Test (TypeScript)
 
-Requires local validator with Light Protocol.
+Requires local validator.
 
-- lightprotocol/zk-compression-cli 0.28.0-beta.5
+```bash
+npm install -g @lightprotocol/zk-compression-cli@0.28.0-beta.5
+```
 
 ```bash
 light test-validator
 npm test
 ```
 
-## Rust SDK
+## SDK 
+
+### Example Usage with Rust and Typescript
+
+Both examples load your Solana keypair at `~/.config/solana/id.json`.
+
+**Devnet**(default):
+
+Set up the `.env` file with a Helius API key ([get one here](https://dev.helius.xyz)):
+
+```bash
+cp .env.example .env
+# edit .env and add your API_KEY
+```
+
+**Localnet:**
+For localnet, install the CLI, start the test-validator with the program, and swap the RPC comments in the example files:
+
+```bash
+npm install -g @lightprotocol/zk-compression-cli@0.28.0-beta.5
+```
+
+```bash
+light test-validator --sbf-program NFLx5WGPrTHHvdRNsidcrNcLxRruMC92E4yv7zhZBoT target/deploy/light_nullifier_program.so
+```
+
+#### Rust
+
+> Find and run example here: [rust/src/main.rs](examples/rust/src/main.rs).
+
+```bash
+cd examples/rust && cargo run
+```
+
+#### TypeScript
+
+> Find and run example here: [action-create-nullifier.ts](action-create-nullifier.ts).
+
+```bash
+npm install
+```
+
+```bash
+npm run ts:create-nullifier
+```
+
+## Rust SDK Guide
 
 Works with `LightClient` (production) or `LightProgramTest` (testing).
 
@@ -42,7 +90,9 @@ Works with `LightClient` (production) or `LightProgramTest` (testing).
 use light_nullifier_program::sdk::{create_nullifier_ix, PROGRAM_ID};
 use light_client::{LightClient, LightClientConfig};
 
-let mut rpc = LightClient::new(LightClientConfig::new("https://devnet.helius-rpc.com/?api-key=...")).await?;
+let rpc_url = "https://devnet.helius-rpc.com/?api-key=...".to_string();
+let config = LightClientConfig::new(rpc_url, None, None);
+let mut rpc = LightClient::new(config).await?;
 let ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
 ```
 
@@ -55,7 +105,7 @@ let proof_result = fetch_proof(&mut rpc, &id).await?;
 let ix = build_instruction(payer.pubkey(), id, proof_result);
 ```
 
-## TypeScript SDK
+## TypeScript SDK Guide
 
 Works with any `Rpc` from `@lightprotocol/stateless.js`.
 
@@ -96,6 +146,10 @@ const exists = account !== null;
 2. Creates the empty rentfree PDA account, "spending the nullifier"
 3. If the address already exists, the instruction fails
 4. prepend or append this instruction to your regular transaction (eg. payment)
+
+## Documentation 
+
+Find more documentation here: https://www.zkcompression.com/compressed-pdas/guides/how-to-create-nullifier-pdas.
 
 ---
 
